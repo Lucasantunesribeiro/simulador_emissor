@@ -1,0 +1,47 @@
+# Build
+bin/
+obj/
+
+# User files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Dotnet secrets
+secrets.json
+
+# Test results
+TestResults/
+
+# Docker
+**/Dockerfile*
+
+# Logs
+*.log
+
+# Cursor
+.cursor/
+
+# Outros
+README_estudo.md
+
+# Ignore pacotes NuGet baixados
+*.nupkg
+
+# Ignore arquivos de publish
+publish/
+
+# Ignore arquivos temporários
+*.tmp
+*.bak
+
+# Ignore arquivos de backup do editor
+*~ 
