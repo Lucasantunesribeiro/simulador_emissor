@@ -1,71 +1,109 @@
-# Emissão Automatizada de NF-e (.NET 9)
+# Sistema de Emissão de NF-e (.NET 9)
 
 ## Visão Geral
 
-Projeto completo para emissão automatizada de Nota Fiscal Eletrônica (NF-e) com .NET 9, arquitetura em camadas, testes automatizados, health check, pronto para CI/CD, Docker e cache distribuído.
+Sistema completo para emissão automatizada de Nota Fiscal Eletrônica (NF-e) desenvolvido com .NET 9, seguindo arquitetura limpa e pronto para produção com Docker Compose.
 
-## Estrutura de Pastas
+## ⚠️ **IMPORTANTE: MODO SIMULAÇÃO**
 
-- **NFe.API**: API REST (controllers, endpoints, health check, swagger)
-- **NFe.Core**: Domínio (entidades, interfaces, serviços de negócio)
-- **NFe.Infrastructure**: Implementações (repositórios, integração SEFAZ, assinatura, validação XML)
-- **NFe.Worker**: Serviço background para processar vendas pendentes
-- **NFe.Tests**: Testes unitários (xUnit)
+> **Este sistema opera em modo de simulação por padrão e NÃO emite NFes reais.**
+> 
+> - Todas as operações são simuladas para fins de desenvolvimento e testes
+> - Nenhuma comunicação real é feita com a SEFAZ
+> - Para uso em produção, são necessárias configurações adicionais (veja seção abaixo)
 
 ## Como Rodar
 
-1. **Requisitos:** .NET 9 SDK, Docker (opcional para orquestração)
-2. **Build:**
-   ```bash
-   dotnet build
-   ```
-3. **Testes:**
-   ```bash
-   dotnet test NFe.Tests/NFe.Tests.csproj
-   ```
-4. **Rodar API:**
-   ```bash
-   dotnet run --project NFe.API/NFe.API.csproj
-   ```
-5. **Rodar com Docker Compose:**
-   ```bash
-   docker-compose up -d
-   ```
+### Pré-requisitos
+- .NET 9 SDK
+- Docker e Docker Compose (recomendado)
 
-## Endpoints Principais
+### Execução com Docker Compose (Recomendado)
+```bash
+# Subir todos os serviços (API, Worker e PostgreSQL)
+docker-compose up -d
 
-- **POST /api/v1/vendas**: Cria venda
-- **GET /api/v1/vendas/{id}**: Detalhe da venda
-- **GET /api/v1/vendas/{id}/status**: Status processamento
-- **GET /api/v1/protocolos/{id}**: Detalhe protocolo
-- **GET /api/v1/protocolos/chave/{chaveAcesso}**: Busca protocolo por chave
-- **GET /health**: Health check
-- **GET /swagger**: Documentação interativa
+# Verificar logs
+docker-compose logs -f
+
+# Parar serviços
+docker-compose down
+```
+
+A API estará disponível em: `http://localhost:5000`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health Check: `http://localhost:5000/health`
+
+### Execução Manual (Desenvolvimento)
+```bash
+# Restaurar dependências
+dotnet restore
+
+# Build do projeto
+dotnet build
+
+# Executar API
+dotnet run --project NFe.API
+
+# Executar Worker (em outro terminal)
+dotnet run --project NFe.Worker
+```
+
+## Arquitetura
+
+O projeto segue os princípios de Clean Architecture com separação clara de responsabilidades:
+
+- **NFe.API**: Camada de apresentação (REST API, controllers, health checks)
+- **NFe.Core**: Camada de domínio (entidades, interfaces, regras de negócio)
+- **NFe.Infrastructure**: Camada de infraestrutura (repositórios, integração externa)
+- **NFe.Worker**: Serviço de background para processamento assíncrono
 
 ## CI/CD
 
-- Pipeline GitHub Actions já configurado para build, test e deploy.
-- Dockerfile e docker-compose prontos para produção e desenvolvimento.
+O projeto inclui configuração básica para CI/CD:
+- Dockerfiles otimizados para cada serviço
+- Docker Compose para orquestração local
+- Estrutura preparada para pipelines de deploy
 
-## Simulação vs Produção Real
+## Configuração para Produção
 
-> **Este projeto está em modo de simulação por padrão.**
+Para usar este sistema em produção com emissão real de NFes, são necessárias as seguintes alterações:
 
-- **SefazClient**: Retorna respostas simuladas se a flag `_simulacao` for `true`. Para produção, troque para `false` e ajuste as URLs/endpoints reais da SEFAZ.
-- **Assinador**: Simula assinatura digital. Para produção, implemente a integração real com Azure Key Vault ou outro provedor de certificado.
-- **Repositórios**: Usam listas em memória. Para produção, troque por implementação com banco de dados (ex: Entity Framework Core, Dapper).
+### 1. Configuração SEFAZ
+- Alterar URLs dos endpoints para os ambientes reais da SEFAZ
+- Configurar certificados digitais válidos
+- Implementar autenticação real com a SEFAZ
 
-### Como alternar para produção real
+### 2. Assinatura Digital
+- Integrar com Azure Key Vault ou HSM
+- Configurar certificados A1/A3 válidos
+- Implementar assinatura digital real dos XMLs
 
-1. **SefazClient**
-   - Altere `private readonly bool _simulacao = true;` para `false` em `SefazClient.cs`.
-   - Ajuste as URLs dos endpoints SEFAZ para os reais.
-2. **Assinador**
-   - Implemente o método `ObterCertificadoDoKeyVault` para buscar o certificado real.
-3. **Repositórios**
-   - Implemente repositórios persistentes (ex: EF Core, Dapper) e registre no DI.
-4. **Testes**
-   - Adapte/mantenha mocks para ambiente de testes.
+### 3. Banco de Dados
+- Configurar banco de dados persistente (PostgreSQL em produção)
+- Executar migrações do Entity Framework
+- Configurar backup e recuperação
 
-> O restante do código já está pronto para produção, bastando trocar essas camadas.
+### 4. Monitoramento
+- Configurar logs estruturados
+- Implementar métricas de negócio
+- Configurar alertas para falhas
 
+### 5. Segurança
+- Implementar autenticação e autorização
+- Configurar HTTPS obrigatório
+- Validar e sanitizar todas as entradas
+
+## Tecnologias Utilizadas
+
+- **.NET 9**: Framework principal
+- **ASP.NET Core**: API REST
+- **Entity Framework Core**: ORM para PostgreSQL
+- **PostgreSQL**: Banco de dados
+- **Docker**: Containerização
+- **Swagger/OpenAPI**: Documentação da API
+- **Health Checks**: Monitoramento de saúde
+
+## Licença
+
+Este projeto é fornecido como exemplo educacional. Para uso comercial, certifique-se de cumprir todas as regulamentações fiscais brasileiras.

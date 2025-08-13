@@ -1,29 +1,63 @@
-name: Deploy Azure
-on: [push]
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
       
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '9.0.x'
-          
-      - name: Restore dependencies
-        run: dotnet restore
-        
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-        
-      - name: Test
-        run: dotnet test --no-build --verbosity normal --configuration Release
-        
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          
-      - name: Deploy to Azure
-        run: az webapp up --name nfe-emitter --runtime "DOTNET:9.0"
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Build and deploy API
+      run: |
+        dotnet publish NFe.API/NFe.API.csproj -c Release
+        cd NFe.API/bin/Release/net9.0/publish
+        zip -r ../../../../../nfe-api.zip .
+        cd ../../../../../
+        aws lambda update-function-code --function-name nfe-api --zip-file fileb://nfe-api.zip
+
+    - name: Build and deploy Worker
+      run: |
+        dotnet publish NFe.Worker/NFe.Worker.csproj -c Release
+        cd NFe.Worker/bin/Release/net9.0/publish
+        zip -r ../../../../../nfe-worker.zip .
+        cd ../../../../../
+        aws lambda update-function-code --function-name nfe-worker --zip-file fileb://nfe-worker.zip

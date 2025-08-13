@@ -9,6 +9,7 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=nfedb;Username=nfeadmin;Password=NFeSecurePass2025!
     depends_on:
       - db
     networks:
@@ -18,6 +19,9 @@ services:
     build:
       context: .
       dockerfile: NFe.Worker/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=nfedb;Username=nfeadmin;Password=NFeSecurePass2025!
     depends_on:
       - db
       - api
@@ -25,14 +29,15 @@ services:
       - nfe-network
 
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:15
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=NFeEmitter@2025
+      - POSTGRES_DB=nfedb
+      - POSTGRES_USER=nfeadmin
+      - POSTGRES_PASSWORD=NFeSecurePass2025!
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqldata:/var/opt/mssql
+      - pgdata:/var/lib/postgresql/data
     networks:
       - nfe-network
 
@@ -41,4 +46,4 @@ networks:
     driver: bridge
 
 volumes:
-  sqldata:
+  pgdata:

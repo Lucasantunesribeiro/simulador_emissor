@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using NFe.Core.Entities;
+using NFe.Core.DTOs;
 using NFe.Core.Interfaces;
 
 namespace NFe.API.Controllers
@@ -8,57 +8,78 @@ namespace NFe.API.Controllers
     [Route("api/v1/[controller]")]
     public class VendasController : ControllerBase
     {
-        private readonly IVendaRepository _vendaRepository;
         private readonly INFeService _nfeService;
-        
-        public VendasController(IVendaRepository vendaRepository, INFeService nfeService)
+
+        public VendasController(INFeService nfeService)
         {
-            _vendaRepository = vendaRepository;
             _nfeService = nfeService;
         }
-        
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Venda>> Get(Guid id)
+
+        /// <summary>
+        /// Obter todas as vendas
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<VendaResponseDto>>> GetVendas()
         {
-            var venda = await _vendaRepository.GetByIdAsync(id);
-            
+            var vendas = await _nfeService.ObterTodasVendasAsync();
+            return Ok(vendas);
+        }
+
+        /// <summary>
+        /// Obter vendas pendentes de processamento
+        /// </summary>
+        [HttpGet("pendentes")]
+        public async Task<ActionResult<IEnumerable<VendaResponseDto>>> GetVendasPendentes()
+        {
+            var vendas = await _nfeService.ObterVendasPendentesAsync();
+            return Ok(vendas);
+        }
+
+        /// <summary>
+        /// Obter venda por ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<VendaResponseDto>> GetVenda(Guid id)
+        {
+            var venda = await _nfeService.ObterVendaAsync(id);
             if (venda == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Venda não encontrada" });
             }
-            
             return Ok(venda);
         }
-        
+
+        /// <summary>
+        /// Criar nova venda
+        /// </summary>
         [HttpPost]
-        public async Task<ActionResult<Guid>> Post([FromBody] Venda venda)
+        public async Task<ActionResult<VendaResponseDto>> CreateVenda(VendaCreateDto vendaDto)
         {
-            venda.DataVenda = DateTime.Now;
-            venda.Processada = false;
-            
-            var id = await _vendaRepository.AddAsync(venda);
-            
-            // Em um cenário real, aqui seria enviado para uma fila
-            // para processamento assíncrono pelo Worker
-            
-            return CreatedAtAction(nameof(Get), new { id }, id);
-        }
-        
-        [HttpGet("{id}/status")]
-        public async Task<ActionResult<string>> GetStatus(Guid id)
-        {
-            var venda = await _vendaRepository.GetByIdAsync(id);
-            
-            if (venda == null)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return BadRequest(ModelState);
             }
+
+            var vendaId = await _nfeService.CriarVendaAsync(vendaDto);
+            var venda = await _nfeService.ObterVendaAsync(vendaId);
             
-            return Ok(new { 
-                Status = venda.Processada ? "Processada" : "Pendente",
-                NumeroNota = venda.NumeroNota,
-                ChaveAcesso = venda.ChaveAcesso
-            });
+            return CreatedAtAction(nameof(GetVenda), new { id = vendaId }, venda);
+        }
+
+        /// <summary>
+        /// Processar venda (gerar NFe simulada)
+        /// </summary>
+        [HttpPost("{id}/processar")]
+        public async Task<ActionResult> ProcessarVenda(Guid id)
+        {
+            var sucesso = await _nfeService.ProcessarVendaAsync(id);
+            if (!sucesso)
+            {
+                return BadRequest(new { message = "Não foi possível processar a venda. Verifique se ela existe e está pendente." });
+            }
+
+            var venda = await _nfeService.ObterVendaAsync(id);
+            return Ok(new { message = "Venda processada com sucesso", venda });
         }
     }
 }

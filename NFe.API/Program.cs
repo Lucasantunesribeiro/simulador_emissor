@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using NFe.Core.Interfaces;
 using NFe.Core.Services;
 using NFe.Infrastructure.Repositories;
-using NFe.Infrastructure.Security;
-using NFe.Infrastructure.Sefaz;
+using NFe.Infrastructure.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 
@@ -16,12 +16,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Entity Framework
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.Services.AddDbContext<NFeDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
 
-builder.Services.AddScoped<INFeService, NFeService>();
-builder.Services.AddScoped<IVendaRepository, VendaRepository>();
-builder.Services.AddScoped<IProtocoloRepository, ProtocoloRepository>();
-builder.Services.AddScoped<ISefazClient, SefazClient>();
-builder.Services.AddScoped<Assinador>();
+// Services
+builder.Services.AddScoped<INFeService, SimulacaoNFeService>();
+builder.Services.AddScoped<IVendaRepository, VendaRepositoryEF>();
+builder.Services.AddScoped<IProtocoloRepository, ProtocoloRepositoryEF>();
 
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy())

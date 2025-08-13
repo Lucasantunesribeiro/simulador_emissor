@@ -1,90 +1,71 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NFe.Core.Interfaces;
-using NFe.Core.Entities;
-using System.Linq;
 
-namespace NFe.Worker
+namespace NFe.Worker;
+
+public class NFeWorker : BackgroundService
 {
-    public class NFeWorker : BackgroundService
+    private readonly ILogger<NFeWorker> _logger;
+    private readonly IServiceProvider _serviceProvider;
+
+    public NFeWorker(ILogger<NFeWorker> logger, IServiceProvider serviceProvider)
     {
-        private readonly ILogger<NFeWorker> _logger;
-        private readonly IVendaRepository _vendaRepository;
-        private readonly INFeService _nfeService;
-        private readonly IProtocoloRepository _protocoloRepository;
-        
-        public NFeWorker(
-            ILogger<NFeWorker> logger,
-            IVendaRepository vendaRepository,
-            INFeService nfeService,
-            IProtocoloRepository protocoloRepository)
-        {
-            _logger = logger;
-            _vendaRepository = vendaRepository;
-            _nfeService = nfeService;
-            _protocoloRepository = protocoloRepository;
-        }
+        _logger = logger;
+        _serviceProvider = serviceProvider;
+    }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Serviço de processamento de NF-e iniciado");
-
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogInformation("Verificando vendas pendentes");
-                
-                try
-                {
-                    var vendasPendentes = await _vendaRepository.GetPendentesAsync();
-                    
-                    foreach (var venda in vendasPendentes)
-                    {
-                        await ProcessarVenda(venda);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Erro ao processar vendas pendentes");
-                }
-                
-                await Task.Delay(10000, stoppingToken); // Aguarda 10 segundos antes da próxima verificação
-            }
-        }
-        
-        private async Task ProcessarVenda(Venda venda)
-        {
-            _logger.LogInformation($"Processando venda {venda.Id}");
-            
             try
             {
-                // Gerar XML
-                var xml = await _nfeService.GerarXml(venda);
-                
-                // Assinar XML
-                var xmlAssinado = await _nfeService.AssinarXml(xml);
-                
-                // Transmitir para SEFAZ
-                var protocolo = await _nfeService.TransmitirXml(xmlAssinado);
-                
-                // Salvar protocolo
-                await _protocoloRepository.AddAsync(protocolo);
-                
-                // Atualizar venda
-                venda.Processada = true;
-                venda.NumeroNota = "1"; // Em um cenário real, seria extraído do XML
-                venda.ChaveAcesso = protocolo.ChaveAcesso;
-                
-                await _vendaRepository.UpdateAsync(venda);
-                
-                _logger.LogInformation($"Venda {venda.Id} processada com sucesso. Protocolo: {protocolo.NumeroRecibo}");
+                _logger.LogInformation("Worker NFe executando em: {time}", DateTimeOffset.Now);
+
+                using var scope = _serviceProvider.CreateScope();
+                var nfeService = scope.ServiceProvider.GetRequiredService<INFeService>();
+
+                // Buscar vendas pendentes
+                var vendasPendentes = await nfeService.ObterVendasPendentesAsync();
+
+                foreach (var venda in vendasPendentes)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Processando venda {VendaId}", venda.Id);
+
+                        // Processar venda (gerar NFe simulada)
+                        var sucesso = await nfeService.ProcessarVendaAsync(venda.Id);
+                        
+                        if (sucesso)
+                        {
+                            _logger.LogInformation("Venda {VendaId} processada com sucesso", venda.Id);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Não foi possível processar venda {VendaId}", venda.Id);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Erro ao processar venda {VendaId}", venda.Id);
+                    }
+                }
+
+                if (vendasPendentes.Any())
+                {
+                    _logger.LogInformation("Processadas {Count} vendas pendentes", vendasPendentes.Count());
+                }
+                else
+                {
+                    _logger.LogInformation("Nenhuma venda pendente encontrada");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Erro ao processar venda {venda.Id}");
+                _logger.LogError(ex, "Erro no worker NFe");
             }
+
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using NFe.Core.Entities;
+using NFe.Core.DTOs;
 using NFe.Core.Interfaces;
 
 namespace NFe.API.Controllers
@@ -8,36 +8,53 @@ namespace NFe.API.Controllers
     [Route("api/v1/[controller]")]
     public class ProtocolosController : ControllerBase
     {
-        private readonly IProtocoloRepository _protocoloRepository;
-        
-        public ProtocolosController(IProtocoloRepository protocoloRepository)
+        private readonly INFeService _nfeService;
+
+        public ProtocolosController(INFeService nfeService)
         {
-            _protocoloRepository = protocoloRepository;
+            _nfeService = nfeService;
         }
-        
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Protocolo>> Get(Guid id)
+
+        /// <summary>
+        /// Obter todos os protocolos
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProtocoloResponseDto>>> GetProtocolos()
         {
-            var protocolo = await _protocoloRepository.GetByIdAsync(id);
-            
+            var protocolos = await _nfeService.ObterTodosProtocolosAsync();
+            return Ok(protocolos);
+        }
+
+        /// <summary>
+        /// Obter protocolo por ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ProtocoloResponseDto>> GetProtocolo(Guid id)
+        {
+            var protocolo = await _nfeService.ObterProtocoloAsync(id);
             if (protocolo == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Protocolo não encontrado" });
             }
-            
             return Ok(protocolo);
         }
-        
+
+        /// <summary>
+        /// Consultar protocolo por chave de acesso
+        /// </summary>
         [HttpGet("chave/{chaveAcesso}")]
-        public async Task<ActionResult<Protocolo>> GetByChaveAcesso(string chaveAcesso)
+        public async Task<ActionResult<ProtocoloResponseDto>> GetProtocoloPorChave(string chaveAcesso)
         {
-            var protocolo = await _protocoloRepository.GetByChaveAcessoAsync(chaveAcesso);
-            
+            if (string.IsNullOrEmpty(chaveAcesso) || chaveAcesso.Length != 44)
+            {
+                return BadRequest(new { message = "Chave de acesso deve ter 44 dígitos" });
+            }
+
+            var protocolo = await _nfeService.ObterProtocoloPorChaveAsync(chaveAcesso);
             if (protocolo == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Protocolo não encontrado para a chave de acesso informada" });
             }
-            
             return Ok(protocolo);
         }
     }
