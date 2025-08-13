@@ -319,54 +319,11 @@ public async Task<X509Certificate2> ObterCertificadoReal()
 - **Throughput**: 1000+ req/min
 - **Memory Usage**: < 100MB
 
-## 📚 Documentação Adicional
-
-### **📖 Guias Disponíveis**
-- 📋 **[CHANGELOG.md](CHANGELOG.md)**: Histórico de mudanças
-- 🏦 **[CONFIGURAR-BUDGET-AWS.md](CONFIGURAR-BUDGET-AWS.md)**: Controle de custos AWS
-- 🔐 **[CONFIGURAR-GITHUB-SECRETS.md](CONFIGURAR-GITHUB-SECRETS.md)**: Setup do CI/CD
-- 🔧 **[CORRIGIR-GITHUB-SECRETS.md](CORRIGIR-GITHUB-SECRETS.md)**: Troubleshooting
-
-### **🔗 Links Úteis**
-- **Repositório**: https://github.com/Lucasantunesribeiro/simulador_emissor
-- **Issues**: https://github.com/Lucasantunesribeiro/simulador_emissor/issues
-- **Actions**: https://github.com/Lucasantunesribeiro/simulador_emissor/actions
-- **Releases**: https://github.com/Lucasantunesribeiro/simulador_emissor/releases
-
-## 🤝 Contribuição
-
-### **🔄 Como Contribuir**
-1. **Fork** o projeto
-2. **Crie** uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** para a branch (`git push origin feature/AmazingFeature`)
-5. **Abra** um Pull Request
-
 ### **📝 Padrões**
 - ✅ **Clean Code**: Código limpo e legível
 - ✅ **SOLID**: Princípios de design
 - ✅ **Conventional Commits**: Padrão de commits
 - ✅ **Documentação**: Código bem documentado
-
-## 📄 Licença
-
-Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 👨‍💻 Autor
-
-**Lucas Antunes Ribeiro**
-- 🐙 **GitHub**: [@Lucasantunesribeiro](https://github.com/Lucasantunesribeiro)
-- 📧 **Email**: lucasantunesribeiro@gmail.com
-- 💼 **LinkedIn**: [Lucas Antunes](https://linkedin.com/in/lucasantunesribeiro)
-
-## 🙏 Agradecimentos
-
-- **Microsoft**: Pela excelente plataforma .NET
-- **AWS**: Pela infraestrutura cloud robusta
-- **Comunidade Open Source**: Pelas bibliotecas utilizadas
-- **SEFAZ**: Pela documentação técnica da NFe
-
----
 
 ## 🎯 **Status do Projeto: PRODUÇÃO READY**
 
