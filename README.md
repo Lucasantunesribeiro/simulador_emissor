@@ -88,15 +88,21 @@ graph TD
 git clone https://github.com/Lucasantunesribeiro/simulador_emissor.git
 cd simulador_emissor
 
-# 2. Subir todos os serviços
+# 2. Configurar variáveis de ambiente
+cp env.example .env
+# Edite o arquivo .env com suas configurações
+
+# 3. Subir todos os serviços
 docker-compose up -d
 
-# 3. Verificar status
+# 4. Verificar status
 docker-compose ps
 
-# 4. Acompanhar logs
+# 5. Acompanhar logs
 docker-compose logs -f api
 ```
+
+> **🔒 IMPORTANTE**: Configure o arquivo `.env` antes de executar. Veja [SECURITY.md](SECURITY.md) para detalhes.
 
 **🌐 Acessos:**
 - **API**: http://localhost:5000
@@ -323,6 +329,7 @@ public async Task<X509Certificate2> ObterCertificadoReal()
 
 ### **📖 Guias Disponíveis**
 - 📋 **[CHANGELOG.md](CHANGELOG.md)**: Histórico de mudanças
+- 🔒 **[SECURITY.md](SECURITY.md)**: Guia de segurança e correções aplicadas
 - 🏦 **[CONFIGURAR-BUDGET-AWS.md](CONFIGURAR-BUDGET-AWS.md)**: Controle de custos AWS
 - 🔐 **[CONFIGURAR-GITHUB-SECRETS.md](CONFIGURAR-GITHUB-SECRETS.md)**: Setup do CI/CD
 - 🔧 **[CORRIGIR-GITHUB-SECRETS.md](CORRIGIR-GITHUB-SECRETS.md)**: Troubleshooting
