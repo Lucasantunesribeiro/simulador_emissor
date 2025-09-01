@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NFe.Infrastructure", "NFe.I
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NFe.Worker", "NFe.Worker\NFe.Worker.csproj", "{6D8EFBAB-65B4-482A-89F1-000D6175FBEE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NFe.Tests", "NFe.Tests\NFe.Tests.csproj", "{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}"
+EndProject
 
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -70,6 +72,18 @@ Global
 		{6D8EFBAB-65B4-482A-89F1-000D6175FBEE}.Release|x64.Build.0 = Release|Any CPU
 		{6D8EFBAB-65B4-482A-89F1-000D6175FBEE}.Release|x86.ActiveCfg = Release|Any CPU
 		{6D8EFBAB-65B4-482A-89F1-000D6175FBEE}.Release|x86.Build.0 = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|x64.Build.0 = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Debug|x86.Build.0 = Debug|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|x64.ActiveCfg = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|x64.Build.0 = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|x86.ActiveCfg = Release|Any CPU
+		{E8F0B8E9-7F8E-4B7A-8F8A-2C9D4E5F6A7B}.Release|x86.Build.0 = Release|Any CPU
 
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

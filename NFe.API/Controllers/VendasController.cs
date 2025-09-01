@@ -9,10 +9,12 @@ namespace NFe.API.Controllers
     public class VendasController : ControllerBase
     {
         private readonly INFeService _nfeService;
+        private readonly ILogger<VendasController> _logger;
 
-        public VendasController(INFeService nfeService)
+        public VendasController(INFeService nfeService, ILogger<VendasController> logger)
         {
             _nfeService = nfeService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -21,8 +23,18 @@ namespace NFe.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VendaResponseDto>>> GetVendas()
         {
-            var vendas = await _nfeService.ObterTodasVendasAsync();
-            return Ok(vendas);
+            try
+            {
+                _logger.LogInformation("Iniciando busca por todas as vendas");
+                var vendas = await _nfeService.ObterTodasVendasAsync();
+                _logger.LogInformation("Encontradas {Count} vendas", vendas.Count());
+                return Ok(vendas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao obter todas as vendas");
+                return StatusCode(500, new { message = "Erro interno do servidor" });
+            }
         }
 
         /// <summary>
@@ -31,8 +43,18 @@ namespace NFe.API.Controllers
         [HttpGet("pendentes")]
         public async Task<ActionResult<IEnumerable<VendaResponseDto>>> GetVendasPendentes()
         {
-            var vendas = await _nfeService.ObterVendasPendentesAsync();
-            return Ok(vendas);
+            try
+            {
+                _logger.LogInformation("Iniciando busca por vendas pendentes");
+                var vendas = await _nfeService.ObterVendasPendentesAsync();
+                _logger.LogInformation("Encontradas {Count} vendas pendentes", vendas.Count());
+                return Ok(vendas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao obter vendas pendentes");
+                return StatusCode(500, new { message = "Erro interno do servidor" });
+            }
         }
 
         /// <summary>
@@ -41,12 +63,22 @@ namespace NFe.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<VendaResponseDto>> GetVenda(Guid id)
         {
-            var venda = await _nfeService.ObterVendaAsync(id);
-            if (venda == null)
+            try
             {
-                return NotFound(new { message = "Venda não encontrada" });
+                _logger.LogInformation("Buscando venda com ID: {VendaId}", id);
+                var venda = await _nfeService.ObterVendaAsync(id);
+                if (venda == null)
+                {
+                    _logger.LogWarning("Venda não encontrada: {VendaId}", id);
+                    return NotFound(new { message = "Venda não encontrada" });
+                }
+                return Ok(venda);
             }
-            return Ok(venda);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao obter venda {VendaId}", id);
+                return StatusCode(500, new { message = "Erro interno do servidor" });
+            }
         }
 
         /// <summary>
@@ -55,15 +87,26 @@ namespace NFe.API.Controllers
         [HttpPost]
         public async Task<ActionResult<VendaResponseDto>> CreateVenda(VendaCreateDto vendaDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Dados inválidos para criação de venda: {ModelState}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
-            var vendaId = await _nfeService.CriarVendaAsync(vendaDto);
-            var venda = await _nfeService.ObterVendaAsync(vendaId);
-            
-            return CreatedAtAction(nameof(GetVenda), new { id = vendaId }, venda);
+                _logger.LogInformation("Criando nova venda para cliente: {ClienteNome}", vendaDto.ClienteNome);
+                var vendaId = await _nfeService.CriarVendaAsync(vendaDto);
+                var venda = await _nfeService.ObterVendaAsync(vendaId);
+                
+                _logger.LogInformation("Venda criada com sucesso: {VendaId}", vendaId);
+                return CreatedAtAction(nameof(GetVenda), new { id = vendaId }, venda);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao criar venda para cliente: {ClienteNome}", vendaDto?.ClienteNome);
+                return StatusCode(500, new { message = "Erro interno do servidor" });
+            }
         }
 
         /// <summary>
@@ -72,14 +115,25 @@ namespace NFe.API.Controllers
         [HttpPost("{id}/processar")]
         public async Task<ActionResult> ProcessarVenda(Guid id)
         {
-            var sucesso = await _nfeService.ProcessarVendaAsync(id);
-            if (!sucesso)
+            try
             {
-                return BadRequest(new { message = "Não foi possível processar a venda. Verifique se ela existe e está pendente." });
-            }
+                _logger.LogInformation("Processando venda: {VendaId}", id);
+                var sucesso = await _nfeService.ProcessarVendaAsync(id);
+                if (!sucesso)
+                {
+                    _logger.LogWarning("Falha ao processar venda: {VendaId}", id);
+                    return BadRequest(new { message = "Não foi possível processar a venda. Verifique se ela existe e está pendente." });
+                }
 
-            var venda = await _nfeService.ObterVendaAsync(id);
-            return Ok(new { message = "Venda processada com sucesso", venda });
+                var venda = await _nfeService.ObterVendaAsync(id);
+                _logger.LogInformation("Venda processada com sucesso: {VendaId}", id);
+                return Ok(new { message = "Venda processada com sucesso", venda });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao processar venda: {VendaId}", id);
+                return StatusCode(500, new { message = "Erro interno do servidor" });
+            }
         }
     }
 }

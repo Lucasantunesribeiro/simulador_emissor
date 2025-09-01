@@ -1,0 +1,33 @@
+{
+  "name": "nfe-infrastructure",
+  "version": "1.0.0",
+  "description": "AWS CDK Infrastructure for NFe System",
+  "main": "lib/nfe-infrastructure-stack.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "deploy:dev": "npm run build && cdk deploy NFeInfrastructureStack-dev --profile default",
+    "deploy:prod": "npm run build && cdk deploy NFeInfrastructureStack-prod --profile production",
+    "diff:dev": "npm run build && cdk diff NFeInfrastructureStack-dev --profile default",
+    "diff:prod": "npm run build && cdk diff NFeInfrastructureStack-prod --profile production",
+    "synth": "npm run build && cdk synth",
+    "destroy:dev": "cdk destroy NFeInfrastructureStack-dev --profile default",
+    "destroy:prod": "cdk destroy NFeInfrastructureStack-prod --profile production"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.9.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.167.1",
+    "constructs": "^10.4.2"
+  },
+  "keywords": ["aws", "cdk", "infrastructure", "nfe", "dotnet"],
+  "author": "Lucas Antunes Ferreira",
+  "license": "MIT"
+}

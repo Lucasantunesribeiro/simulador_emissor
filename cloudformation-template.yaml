@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NFe API - Sistema de emissão de NFe simulada (CloudFormation Direct)
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: nfe-api-function
+    Description: Nome da função Lambda
+  DatabaseHost:
+    Type: String
+    Description: Host do banco PostgreSQL
+    Default: ""
+  DatabaseName:
+    Type: String
+    Description: Nome do banco de dados
+    Default: "nfe_db"
+  DatabaseUsername:
+    Type: String
+    Description: Username do banco
+    Default: "nfe_user"
+  DatabasePassword:
+    Type: String
+    Description: Password do banco
+    NoEcho: true
+    Default: ""
+
+Resources:
+  # IAM Role para a Lambda function
+  NFeApiExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  # CloudWatch Log Group
+  NFeApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
+      RetentionInDays: 14
+
+  # Lambda Function (placeholder - será atualizada via CLI)
+  NFeApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Description: NFe API Lambda Function
+      Runtime: dotnet8
+      Handler: NFe.API::NFe.API.LambdaEntryPoint::FunctionHandlerAsync
+      Code:
+        ZipFile: |
+          // Placeholder code - será substituído pelo deploy
+          using Amazon.Lambda.Core;
+          using Amazon.Lambda.APIGatewayEvents;
+          
+          [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
+          
+          namespace NFe.API
+          {
+              public class LambdaEntryPoint
+              {
+                  public async Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext context)
+                  {
+                      return new APIGatewayProxyResponse
+                      {
+                          StatusCode = 200,
+                          Body = "{\"message\":\"API em manutenção - aguarde deploy\"}",
+                          Headers = new Dictionary<string, string> { {"Content-Type", "application/json"} }
+                      };
+                  }
+              }
+          }
+      Role: !GetAtt NFeApiExecutionRole.Arn
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          ASPNETCORE_ENVIRONMENT: Production
+          PROD_DB_HOST: !Ref DatabaseHost
+          PROD_DB_DATABASE: !Ref DatabaseName
+          PROD_DB_USERNAME: !Ref DatabaseUsername
+          PROD_DB_PASSWORD: !Ref DatabasePassword
+
+  # API Gateway
+  NFeApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "${AWS::StackName}-nfe-api"
+      Description: NFe API Gateway
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource (proxy para capturar todas as rotas)
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NFeApi
+      ParentId: !GetAtt NFeApi.RootResourceId
+      PathPart: '{proxy+}'
+
+  # API Gateway Method (ANY para proxy)
+  ProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref NFeApi
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NFeApiFunction.Arn}/invocations"
+
+  # API Gateway Method para root
+  RootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref NFeApi
+      ResourceId: !GetAtt NFeApi.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NFeApiFunction.Arn}/invocations"
+
+  # Permissão para API Gateway invocar Lambda
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref NFeApiFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${NFeApi}/*/*"
+
+  # Deploy da API
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ProxyMethod
+      - RootMethod
+    Properties:
+      RestApiId: !Ref NFeApi
+      StageName: prod
+
+Outputs:
+  NFeApiUrl:
+    Description: "URL da API NFe"
+    Value: !Sub "https://${NFeApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiUrl"
+      
+  NFeApiFunctionName:
+    Description: "Nome da função Lambda"
+    Value: !Ref NFeApiFunction
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionName"
+      
+  NFeApiId:
+    Description: "ID da API Gateway"
+    Value: !Ref NFeApi
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiId"
