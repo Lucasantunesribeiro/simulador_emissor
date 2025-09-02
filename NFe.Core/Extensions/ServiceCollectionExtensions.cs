@@ -71,11 +71,19 @@ public static class ServiceCollectionExtensions
             ValidateConfiguration(sefazSection, "InscricaoEstadual", "Inscrição estadual do emitente é obrigatória para produção");
             ValidateConfiguration(sefazSection, "CertificateSecretName", "Nome do certificado no AWS Secrets Manager é obrigatório");
             
-            // Validar ambiente (deve ser homologação = 2)
+            // Validar ambiente (produção = 1, homologação = 2)
             var ambiente = sefazSection.GetValue<int>("Ambiente", 2);
-            if (ambiente != 2)
+            if (ambiente != 1 && ambiente != 2)
             {
-                throw new InvalidOperationException("Por segurança, apenas ambiente de homologação (2) é permitido");
+                throw new InvalidOperationException("Ambiente SEFAZ deve ser 1 (produção) ou 2 (homologação)");
+            }
+            
+            // Log crítico para ambiente de produção
+            if (ambiente == 1)
+            {
+                using var serviceProvider = services.BuildServiceProvider();
+                var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<ServiceCollectionExtensions>>();
+                logger?.LogCritical("🚨 SEFAZ PRODUÇÃO ATIVADO - Ambiente: {Ambiente} - EMISSÃO REAL DE NFe", ambiente);
             }
         }
 
