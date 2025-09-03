@@ -1,0 +1,15 @@
+# Ignore git and development files
+.git
+.gitignore
+Dockerfile*
+docker-compose*
+README.md
+*.md
+**/bin/
+**/obj/
+frontend/
+node_modules/
+.vscode/
+.venv/
+*.log
+

@@ -7,8 +7,7 @@ COPY *.sln ./
 COPY NFe.API/*.csproj ./NFe.API/
 COPY NFe.Core/*.csproj ./NFe.Core/
 COPY NFe.Infrastructure/*.csproj ./NFe.Infrastructure/
-COPY NFe.Shared/*.csproj ./NFe.Shared/
-
+ 
 # Restore dependencies
 RUN dotnet restore NFe.API/NFe.API.csproj
 
@@ -16,7 +15,6 @@ RUN dotnet restore NFe.API/NFe.API.csproj
 COPY NFe.API/ ./NFe.API/
 COPY NFe.Core/ ./NFe.Core/
 COPY NFe.Infrastructure/ ./NFe.Infrastructure/
-COPY NFe.Shared/ ./NFe.Shared/
 
 # Build and publish
 RUN dotnet publish NFe.API/NFe.API.csproj -c Release -o /app/publish \
