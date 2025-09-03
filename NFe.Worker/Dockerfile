@@ -6,7 +6,6 @@ WORKDIR /src
 COPY *.sln ./
 COPY NFe.Core/*.csproj ./NFe.Core/
 COPY NFe.Infrastructure/*.csproj ./NFe.Infrastructure/
-COPY NFe.Shared/*.csproj ./NFe.Shared/
 COPY NFe.Worker/*.csproj ./NFe.Worker/
 
 # Restore dependencies
@@ -15,7 +14,6 @@ RUN dotnet restore NFe.Worker/NFe.Worker.csproj
 # Copy only required source code for Worker and dependencies
 COPY NFe.Core/ ./NFe.Core/
 COPY NFe.Infrastructure/ ./NFe.Infrastructure/
-COPY NFe.Shared/ ./NFe.Shared/
 COPY NFe.Worker/ ./NFe.Worker/
 
 # Build and publish
