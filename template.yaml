@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NFe API - Sistema de emissão de NFe simulada
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: dotnet8
+    Environment:
+      Variables:
+        ASPNETCORE_ENVIRONMENT: Production
+
+Parameters:
+  DatabaseHost:
+    Type: String
+    Description: Host do banco PostgreSQL
+    Default: ""
+  DatabaseName:
+    Type: String
+    Description: Nome do banco de dados
+    Default: "nfe_db"
+  DatabaseUsername:
+    Type: String
+    Description: Username do banco
+    Default: "nfe_user"
+  DatabasePassword:
+    Type: String
+    Description: Password do banco
+    NoEcho: true
+    Default: ""
+
+Resources:
+  NFeApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-nfe-api"
+      Description: NFe API Lambda Function
+      CodeUri: ./NFe.API/
+      Handler: NFe.API::NFe.API.LambdaEntryPoint::FunctionHandlerAsync
+      Runtime: dotnet8
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          ASPNETCORE_ENVIRONMENT: Production
+          PROD_DB_HOST: !Ref DatabaseHost
+          PROD_DB_DATABASE: !Ref DatabaseName
+          PROD_DB_USERNAME: !Ref DatabaseUsername
+          PROD_DB_PASSWORD: !Ref DatabasePassword
+      Events:
+        ProxyResource:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NFeApi
+            Path: /{proxy+}
+            Method: ANY
+        RootResource:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NFeApi
+            Path: /
+            Method: ANY
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+              Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  NFeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-nfe-api"
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+
+  # CloudWatch Log Group para a função Lambda
+  NFeApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-nfe-api"
+      RetentionInDays: 14
+
+Outputs:
+  NFeApiUrl:
+    Description: "URL da API NFe"
+    Value: !Sub "https://${NFeApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiUrl"
+      
+  NFeApiFunctionArn:
+    Description: "ARN da função Lambda NFe API"
+    Value: !GetAtt NFeApiFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionArn"
+      
+  NFeApiId:
+    Description: "ID da API Gateway"
+    Value: !Ref NFeApi
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiId"
