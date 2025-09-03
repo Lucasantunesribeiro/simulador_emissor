@@ -6,12 +6,13 @@ services:
       context: .
       dockerfile: NFe.API/Dockerfile
     ports:
-      - "5000:80"
+      - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ConnectionStrings__DefaultConnection=Host=db;Database=${POSTGRES_DB:-nfedb};Username=${POSTGRES_USER:-nfeadmin};Password=${POSTGRES_PASSWORD:-nfepass123}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - nfe-network
 
@@ -23,8 +24,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ConnectionStrings__DefaultConnection=Host=db;Database=${POSTGRES_DB:-nfedb};Username=${POSTGRES_USER:-nfeadmin};Password=${POSTGRES_PASSWORD:-nfepass123}
     depends_on:
-      - db
-      - api
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
     networks:
       - nfe-network
 
@@ -35,9 +38,14 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-nfeadmin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nfepass123}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nfeadmin} -d ${POSTGRES_DB:-nfedb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - nfe-network
 
