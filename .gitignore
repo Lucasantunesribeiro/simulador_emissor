@@ -26,11 +26,31 @@ secrets.json
 # Test results
 TestResults/
 
-# Docker
-**/Dockerfile*
 
 # Logs
 *.log
+compose-up.log
+frontend/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+NFe.WebApp/node_modules/
+NFe.WebApp/.next/
+NFe.WebApp/out/
+
+# Build artifacts
+**/bin/
+**/obj/
+**/publish/
+**/TestResults/
+**/coverage/
 
 # Cursor
 .cursor/

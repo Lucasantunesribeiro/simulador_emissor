@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test SDK -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    
+    <!-- xUnit Framework -->
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
+    <!-- ASP.NET Core Testing -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+    
+    <!-- Testcontainers -->
+    <PackageReference Include="Testcontainers" Version="3.10.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
+    
+    <!-- Microsoft Extensions .NET 9 -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    
+    <!-- Logging -->
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    
+    <!-- Assertions & Data Generation -->
+    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="Bogus" Version="35.6.1" />
+    
+    <!-- AWS SDK -->
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
+    <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.44" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.30" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NFe.API\NFe.API.csproj" />
+    <ProjectReference Include="..\NFe.Core\NFe.Core.csproj" />
+    <ProjectReference Include="..\NFe.Infrastructure\NFe.Infrastructure.csproj" />
+    <ProjectReference Include="..\NFe.Worker\NFe.Worker.csproj" />
+  </ItemGroup>
+
+</Project>
